@@ -6,8 +6,8 @@ public class Markov
 {
    private static class Word
    {
-       String data;
-       int mult=1;
+      String data;
+      int mult=1;
       
       private ArrayList links = new ArrayList<String>();
       private ArrayList<Integer> weights = new ArrayList<Integer>();
@@ -56,6 +56,15 @@ public class Markov
          
          CDFValid = true;
       }
+      
+      public void printLinks()
+      {
+         System.out.println("Links for \"" + data +"\"");
+         for(int i=0; i<links.size(); i++)
+         {
+            System.out.println(links.get(i) + ": " + weights.get(i));
+         }
+      }
    }
    
    
@@ -79,6 +88,7 @@ public class Markov
          System.out.println(e);
       }
       String s = "";
+      String p = "";
       int code = 0;
       
       //build chain
@@ -91,16 +101,23 @@ public class Markov
          try
          {
             
-            int i = code % chain.length;
-            int index = -1;
+            int i = code % chain.length; //i is between 0 and 999
+            Word index = null; //index stores position in bucket. -1 indicates not found
             if(!s.equals("")) 
-               for(int j=0; j< chain[i].size(); j++)
+               for(int j=0; j< chain[i].size(); j++) //search for the entry in the bucket
                   if(chain[i].get(j).data.equals(s))
-                     index = j;
-            if(index > -1)
-               chain[i].get(index).mult++;
+                     index = chain[i].get(j);
+            if(index != null) //if word exists
+            {
+               index.mult++;
+               
+            }
             else
                chain[i].add(new Word(s));
+               
+            if(p != null)
+               p.addLink(index); //problem. p is a string, not a word
+            p = s; //previous string is assigned the current string
          }
          catch(Exception e)
          {
@@ -132,7 +149,9 @@ public class Markov
          
       }
       
-      System.out.println("The most used data is: " + b.data + " (" + b.mult + " bucket: " + c + ")");
+      System.out.println("The most used data is: \"" + b.data + "\" (" + b.mult + " times in bucket: " + c + ")");
+      
+      b.printLinks();
       
       
    }
