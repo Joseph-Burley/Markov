@@ -4,25 +4,70 @@ import java.lang.Math;
 import java.io.*;
 public class Markov
 {
-   private static class Bucket
+   private static class Word
    {
-      String word;
-      int mult=1;
+       String data;
+       int mult=1;
       
-      Bucket(String s)
+      private ArrayList links = new ArrayList<String>();
+      private ArrayList<Integer> weights = new ArrayList<Integer>();
+      private ArrayList<Integer> CDF = new ArrayList<Integer>();
+      private boolean CDFValid;
+      
+      Word(String s)
       {
-         word = s;
+         data = s;
+      }
+      
+      public void addLink(String s)
+      {
+         int index = links.indexOf(s);
+         if(index > -1)
+         {
+            weights.set(index, Integer.valueOf((weights.get(index))+1));
+         }
+         else
+         {
+            links.add(s);
+            weights.add(1);
+         }
+         
+         CDFValid = false;
+      }
+      
+      public ArrayList<Integer> getCDF()
+      {
+         ArrayList<Integer> ret = new ArrayList<Integer>();
+         for(int i=0; i<CDF.size(); i++)
+         {
+            ret.add(CDF.get(i));
+         }
+         return ret;
+      }
+      public void generateCDF()
+      {
+         CDF.clear();
+         int current = 0;
+         for(int i=0; i<weights.size(); i++)
+         {
+            current += weights.get(i);
+            CDF.add(current);
+         }
+         
+         CDFValid = true;
       }
    }
+   
+   
    
    public static void main(String[] args)
    {
    
       
-      ArrayList<Bucket>[] chain = new ArrayList[1000];
+      ArrayList<Word>[] chain = new ArrayList[1000];
       for(int i=0; i<chain.length; i++)
       {
-         chain[i] = new ArrayList<Bucket>();
+         chain[i] = new ArrayList<Word>();
       }
       //FileInputStream f = new FileInputStream("constitution.txt");
       Scanner Con = null;
@@ -50,12 +95,12 @@ public class Markov
             int index = -1;
             if(!s.equals("")) 
                for(int j=0; j< chain[i].size(); j++)
-                  if(chain[i].get(j).word.equals(s))
+                  if(chain[i].get(j).data.equals(s))
                      index = j;
             if(index > -1)
                chain[i].get(index).mult++;
             else
-               chain[i].add(new Bucket(s));
+               chain[i].add(new Word(s));
          }
          catch(Exception e)
          {
@@ -65,7 +110,7 @@ public class Markov
       
       //show chain
       System.out.println("-------Chain data-------");
-      Bucket b=chain[0].get(0);
+      Word b=chain[0].get(0);
       int c = 0;
       for(int i=0; i<chain.length; i++)
       {
@@ -74,7 +119,7 @@ public class Markov
             System.out.println("Bucket " + i+"------");
             for(int j=0; j<chain[i].size(); j++)
             {
-               System.out.print(chain[i].get(j).word + " (X"+ chain[i].get(j).mult + "), ");
+               System.out.print(chain[i].get(j).data + " (X"+ chain[i].get(j).mult + "), ");
                
                if(b.mult < chain[i].get(j).mult)
                {
@@ -87,7 +132,7 @@ public class Markov
          
       }
       
-      System.out.println("The most used word is: " + b.word + " (" + b.mult + " bucket: " + c + ")");
+      System.out.println("The most used data is: " + b.data + " (" + b.mult + " bucket: " + c + ")");
       
       
    }
