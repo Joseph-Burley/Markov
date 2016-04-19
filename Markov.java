@@ -68,12 +68,9 @@ public class Markov
    }
    
    
-   
+   public static ArrayList<Word>[] chain = new ArrayList[1000];
    public static void main(String[] args)
    {
-   
-      
-      ArrayList<Word>[] chain = new ArrayList[1000];
       for(int i=0; i<chain.length; i++)
       {
          chain[i] = new ArrayList<Word>();
@@ -88,36 +85,33 @@ public class Markov
          System.out.println(e);
       }
       String s = "";
-      String p = "";
+      Word current = null;
+      Word previous = null;
       int code = 0;
       
       //build chain
       while(Con.hasNext())
       {
-         s = Con.next().trim().toLowerCase(); //remove leading and trailing whitespace
-         if(s.charAt(s.length()-1) == ',' || s.charAt(s.length()-1) == '.')
-            s = s.substring(0, s.length()-1);
-         code = Math.abs(s.hashCode());
+         s = Con.next();
+         s=s.replaceAll(";","");
+         s=s.replaceAll("\\.",""); //uses regex. full stop must be escaped
+         s=s.replaceAll(",","");
+         code = computeHash(s);
          try
          {
-            
-            int i = code % chain.length; //i is between 0 and 999
-            Word index = null; //index stores position in bucket. -1 indicates not found
+            current = null; //index stores position in bucket. -1 indicates not found
             if(!s.equals("")) 
-               for(int j=0; j< chain[i].size(); j++) //search for the entry in the bucket
-                  if(chain[i].get(j).data.equals(s))
-                     index = chain[i].get(j);
-            if(index != null) //if word exists
+               current = find(s);
+            if(current != null) //if word exists
             {
-               index.mult++;
-               
+               current.mult++; 
             }
             else
-               chain[i].add(new Word(s));
+               chain[code].add(current = new Word(s));
                
-            if(p != null)
-               p.addLink(index); //problem. p is a string, not a word
-            p = s; //previous string is assigned the current string
+            if(previous != null)
+               previous.addLink(current.data); //problem. p is a string, not a word
+            previous = current; //previous string is assigned the current string
          }
          catch(Exception e)
          {
@@ -153,6 +147,30 @@ public class Markov
       
       b.printLinks();
       
-      
+               
+   }
+   
+   public static Word find(String c)
+   {
+      Word r = null;
+      int hash = computeHash(c);
+      for(int i=0; i<chain[hash].size(); i++)
+      {
+         if(chain[hash].get(i).data.equals(c)) //c is never stripped of whitespace, commas, or periods. This may evaluate incorrectly
+         {
+            r = chain[hash].get(i);
+         }
+      }
+      return r;
+   }
+   
+   public static int computeHash(String s)
+   {
+      int code;
+      s = s.trim().toLowerCase(); //remove leading and trailing whitespace
+      //if(s.charAt(s.length()-1) == ',' || s.charAt(s.length()-1) == '.')
+         //s = s.substring(0, s.length()-1);
+      code = Math.abs(s.hashCode()) % chain.length;
+      return code;
    }
 }
